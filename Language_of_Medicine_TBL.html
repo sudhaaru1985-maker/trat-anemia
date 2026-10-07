@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Language of Medicine – TBL</title>
+<style>
+:root{
+  --bg:#f6f8fc; --card:#ffffff; --ink:#1f2a44; --muted:#5b6785; --line:#e3e8f2;
+  --c0:#6c5ce7; --c1:#0984e3; --c2:#00b894; --c3:#e17055; --c4:#d63031; --c5:#fdcb6e;
+  --c6:#00cec9; --c7:#e84393; --c8:#2d3436; --c9:#a29bfe; --c10:#fd9644; --c11:#20bf6b;
+  --pre:#e84393; --root:#0984e3; --suf:#00b894; --ok:#16a34a; --bad:#dc2626;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden}
+.wrap{max-width:1000px;margin:0 auto;padding:0 16px 60px}
+/* header */
+.hero{background:linear-gradient(135deg,#6c5ce7 0%,#0984e3 50%,#00b894 100%);color:#fff;border-radius:0 0 24px 24px;padding:22px 16px 18px;margin-bottom:14px}
+.hero-in{max-width:1000px;margin:0 auto;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.hero h1{margin:0;font-size:clamp(22px,4vw,32px);line-height:1.2}
+.hero p{margin:4px 0 0;opacity:.95;font-size:15px}
+.hero .tag{display:inline-block;background:rgba(255,255,255,.22);padding:2px 10px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:6px}
+.hero svg{flex:0 0 auto;max-width:100%}
+/* progress */
+.progress{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0 6px}
+.bar{height:10px;background:#dfe5f1;border-radius:10px;overflow:hidden}
+.bar>div{height:100%;width:0;background:linear-gradient(90deg,#e84393,#6c5ce7,#0984e3,#00b894);transition:width .5s}
+.ptext{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;margin-top:3px}
+/* toc chips */
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 16px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:20px;padding:5px 11px;font-size:13.5px;cursor:pointer;color:var(--ink);font-weight:600;font-family:inherit}
+.chip.locked{opacity:.45;cursor:not-allowed}
+.chip.done{border-color:var(--ok);background:#ecfdf3}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* section */
+section.sec{display:none;background:var(--card);border-radius:20px;padding:22px 20px;box-shadow:0 4px 18px rgba(31,42,68,.07);border-top:8px solid var(--accent,#6c5ce7);animation:fade .35s}
+section.sec.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sec h2{margin:0 0 4px;font-size:clamp(20px,3.4vw,26px);color:var(--accent)}
+.sec .sub{color:var(--muted);margin:0 0 14px}
+h3{font-size:18px;margin:20px 0 8px}
+/* boxes */
+.box{border-radius:14px;padding:12px 14px;margin:12px 0;border-left:6px solid}
+.tip{background:#fff8e6;border-color:#fdcb6e}
+.fun{background:#f1edff;border-color:#a29bfe}
+.clin{background:#e8f8f5;border-color:#00b894}
+.warn{background:#fff0f0;border-color:#ff7675}
+.box b.lab{display:block;margin-bottom:2px}
+/* tables */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;margin:10px 0;font-size:15px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.tbl th{background:var(--accent);color:#fff;text-align:left;padding:9px 10px;font-weight:600}
+.tbl td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+.tbl tr:nth-child(even) td{background:#fafbff}
+.tbl td:first-child{font-weight:700}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.everyday{color:#7a5af8;font-style:italic;font-size:14px}
+@media (max-width:640px){
+  .tbl.stack thead{display:none}
+  .tbl.stack, .tbl.stack tbody, .tbl.stack tr, .tbl.stack td{display:block;width:100%}
+  .tbl.stack tr{border-top:3px solid var(--accent);padding:6px 0}
+  .tbl.stack td{border:none;padding:3px 12px}
+  .tbl.stack td::before{content:attr(data-l) ": ";font-weight:600;color:var(--muted);font-size:13px}
+  .tbl.stack td:first-child::before{content:""}
+}
+/* word parts */
+.pre{color:var(--pre);font-weight:700}.root{color:var(--root);font-weight:700}.suf{color:var(--suf);font-weight:700}
+.pill{display:inline-block;padding:1px 9px;border-radius:8px;color:#fff;font-weight:700;margin:1px}
+.pill.p{background:var(--pre)}.pill.r{background:var(--root)}.pill.s{background:var(--suf)}.pill.v{background:#636e72}
+.eg{background:#f8f9ff;border:1px dashed #c7cff0;border-radius:12px;padding:10px 12px;margin:8px 0}
+.eg .w{font-size:19px;font-weight:800;letter-spacing:.3px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+figure{margin:10px 0;text-align:center}
+figure img, figure svg{max-width:100%;height:auto}
+figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+/* video */
+.video{margin:14px 0;border-radius:14px;overflow:hidden;background:#111;border:3px solid var(--accent)}
+.video .vh{background:var(--accent);color:#fff;padding:6px 12px;font-weight:600;font-size:14px}
+.video .frame{position:relative;padding-top:56.25%}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video .vl{background:#fff;padding:6px 12px;font-size:13px}
+.video .vl a{color:var(--c1)}
+/* word builder */
+.builder{background:linear-gradient(135deg,#fff0f7,#eef6ff 50%,#eafff7);border-radius:16px;padding:14px;margin:14px 0;border:2px solid #e9e3ff}
+.builder .sel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.builder select{font-size:16px;padding:8px;border-radius:10px;border:3px solid;font-family:inherit;font-weight:700;background:#fff;max-width:100%}
+#bPre{border-color:var(--pre);color:var(--pre)}#bRoot{border-color:var(--root);color:var(--root)}#bSuf{border-color:var(--suf);color:var(--suf)}
+.bout{text-align:center;margin-top:10px}
+.bout .word{font-size:clamp(22px,5vw,32px);font-weight:800;word-break:break-word}
+.bout .mean{font-size:16px}
+.bout .flag{font-size:13px;margin-top:4px;display:inline-block;padding:2px 10px;border-radius:20px}
+.flag.real{background:#dcfce7;color:#166534}.flag.fake{background:#fef3c7;color:#92400e}
+/* flip cards */
+.flip{perspective:900px;height:170px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.flip .f{background:var(--fc,#6c5ce7);color:#fff;font-size:20px;font-weight:800}
+.flip .f small{font-size:12px;font-weight:500;opacity:.85;margin-top:6px}
+.flip .b{background:#fff;border:3px solid var(--fc,#6c5ce7);transform:rotateY(180deg);font-size:14.5px}
+.flip .b b{color:var(--fc)}
+/* abdomen */
+.abd-wrap{display:grid;grid-template-columns:minmax(220px,340px) 1fr;gap:16px;align-items:center}
+@media (max-width:640px){.abd-wrap{grid-template-columns:1fr}}
+.reg{cursor:pointer;transition:fill .2s}
+.reg:hover{fill-opacity:.55}
+.abd-info{background:#f8f9ff;border-radius:14px;padding:14px;border:2px solid var(--accent);min-height:120px}
+/* direction buttons */
+.dbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
+.dbtn{border:2px solid var(--accent);background:#fff;color:var(--accent);padding:5px 10px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit}
+.dbtn.on{background:var(--accent);color:#fff}
+.arr{opacity:.18;transition:opacity .3s}
+.arr.on{opacity:1}
+/* movement cards */
+.mv{border:3px solid var(--mc);border-radius:16px;padding:12px;background:#fff}
+.mv h4{margin:0 0 6px;color:var(--mc);font-size:17px}
+.mv .try{background:var(--mc);color:#fff;border-radius:10px;padding:5px 10px;font-size:13.5px;margin-top:8px;display:inline-block}
+.mvr{border-left:4px solid var(--mc);background:#fafbff;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:15px}
+.mvr b{color:var(--mc)}
+.mve{font-size:14px;color:#5b6785}
+.mv svg{display:block;margin:0 auto 6px;max-width:100%}
+/* quiz */
+.selfcheck{margin-top:22px;border-radius:16px;padding:16px;background:linear-gradient(135deg,#fffdf0,#fff6fb);border:3px dashed var(--accent)}
+.selfcheck>h3{margin:0 0 4px;color:var(--accent)}
+.q{background:#fff;border-radius:14px;padding:12px;margin:12px 0;border:2px solid var(--line);border-left:7px solid var(--qc,#6c5ce7)}
+.q .stem{font-weight:600;margin-bottom:8px}
+.opt{display:block;width:100%;text-align:left;font-family:inherit;font-size:15.5px;padding:9px 12px;margin:6px 0;border-radius:10px;border:2px solid var(--line);background:#fafbff;cursor:pointer;color:var(--ink)}
+.opt:hover{border-color:var(--qc)}
+.opt.right{background:#dcfce7;border-color:var(--ok);font-weight:700}
+.opt.wrong{background:#fee2e2;border-color:var(--bad);text-decoration:line-through;opacity:.8}
+.opt:disabled{cursor:default}
+.fb{font-size:14.5px;margin-top:6px;padding:8px 10px;border-radius:10px;display:none}
+.fb.show{display:block}
+.fb.g{background:#ecfdf3;color:#14532d}.fb.r{background:#fff1f2;color:#7f1d1d}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{font-family:inherit;font-size:16px;font-weight:700;border:none;border-radius:12px;padding:11px 18px;cursor:pointer;background:var(--accent);color:#fff}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.lockmsg{font-size:14px;color:var(--muted);align-self:center}
+/* decode note */
+.note{background:#fffef5;border:2px solid #f6e58d;border-radius:14px;padding:14px;font-family:"Courier New",monospace;font-size:15.5px;line-height:1.9;box-shadow:inset 0 0 0 4px #fff}
+.dc{background:#ffeaa7;border-bottom:2px dotted #e17055;cursor:pointer;padding:0 3px;border-radius:4px;font-weight:700}
+.dc.open{background:#55efc4}
+.decoded{display:block;font-family:"Segoe UI",system-ui,sans-serif;font-size:14px;background:#e8fff7;border-left:4px solid #00b894;padding:4px 8px;margin:4px 0;border-radius:6px}
+.reveal{font-family:inherit;border:2px solid var(--accent);background:#fff;color:var(--accent);border-radius:10px;padding:6px 12px;font-weight:700;cursor:pointer;margin-top:6px}
+.ans{display:none;margin-top:8px}.ans.show{display:block}
+.score{font-size:20px;font-weight:800;text-align:center;padding:14px;border-radius:14px;background:linear-gradient(135deg,#e0f7ff,#f0e9ff);margin:12px 0}
+.lo li{margin:4px 0}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:12px;background:#eef2ff;color:#4338ca;margin-left:6px;vertical-align:middle}
+footer{font-size:12.5px;color:var(--muted);text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-in">
+    <svg width="210" height="96" viewBox="0 0 210 96" aria-label="Word blocks: peri + card + itis">
+      <rect x="2" y="22" width="62" height="46" rx="10" fill="#e84393" stroke="#fff" stroke-width="3"/>
+      <text x="33" y="51" text-anchor="middle" fill="#fff" font-size="17" font-weight="800" font-family="Segoe UI,Arial">peri</text>
+      <text x="71" y="52" fill="#fff" font-size="22" font-weight="800">+</text>
+      <rect x="86" y="22" width="62" height="46" rx="10" fill="#0984e3" stroke="#fff" stroke-width="3"/>
+      <text x="117" y="51" text-anchor="middle" fill="#fff" font-size="17" font-weight="800" font-family="Segoe UI,Arial">card</text>
+      <text x="152" y="52" fill="#fff" font-size="22" font-weight="800">+</text>
+      <rect x="166" y="22" width="42" height="46" rx="10" fill="#00b894" stroke="#fff" stroke-width="3"/>
+      <text x="187" y="51" text-anchor="middle" fill="#fff" font-size="16" font-weight="800" font-family="Segoe UI,Arial">itis</text>
+      <text x="105" y="90" text-anchor="middle" fill="#fff" font-size="13" font-family="Segoe UI,Arial">= inflammation around the heart</text>
+    </svg>
+    <div style="flex:1;min-width:220px">
+      <span class="tag">🩺 MBBS Year 1 · Your first TBL</span>
+      <h1>The Language of Medicine</h1>
+      <p>Pre-TBL learning module · Dr. Sudha Arumugam, Pathology</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="progress">
+    <div class="bar"><div id="pbar"></div></div>
+    <div class="ptext"><span id="ptext">Section 1 of 11</span><span id="pscore"></span></div>
+  </div>
+  <nav class="toc" id="toc"></nav>
+
+<!-- ============ 0 WELCOME ============ -->
+<section class="sec" id="s0" style="--accent:#6c5ce7">
+  <h2>👋 Welcome to the Language of Medicine</h2>
+  <p class="sub">Week 1 of medical school — and you're about to learn a new language!</p>
+  <p>Medicine has its own language — <b>precise, descriptive and universal</b>. A doctor in Kuala Lumpur, Chennai or London who reads “<i>right iliac fossa tenderness</i>” pictures exactly the same thing. Learning this language now will make every lecture, textbook and ward round from here on much easier.</p>
+
+  <div class="box fun"><b class="lab">🤯 Did you know?</b>
+  The longest word in English dictionaries is a medical term: <b>pneumonoultramicroscopicsilicovolcanoconiosis</b> (45 letters). Scary? By the end of this module you'll be able to break it down:
+  <span class="pill r">pneumono</span> lung · <span class="pill p">ultra</span> beyond · <span class="pill r">microscopic</span> tiny · <span class="pill r">silico</span> silica · <span class="pill r">volcano</span> volcanic dust · <span class="pill s">coniosis</span> dust disease
+  → a lung disease caused by breathing in very fine volcanic silica dust.</div>
+
+  <h3>🎯 Learning outcomes</h3>
+  <p>By the end of this TBL, you should be able to:</p>
+  <ol class="lo">
+    <li>Explain the structure of medical terms (prefix, root, suffix).</li>
+    <li>Interpret unfamiliar medical terms using word components.</li>
+    <li>Use correct anatomical and directional terms to describe the body.</li>
+    <li>Apply medical terminology to clinical case scenarios.</li>
+    <li>Appreciate the importance of standardised medical language in communication.</li>
+  </ol>
+
+  <div class="box tip"><b class="lab">🧭 How this module works</b>
+  Work through the sections in order. At the end of each section there is a short <b>Self-check</b>. Answer it correctly to unlock the next section (you can retry as many times as you need). Watch the short videos — they are optional but very helpful. Bring what you learn to the in-class iRAT and team activities!</div>
+
+  <div class="video"><div class="vh">🎬 Warm-up video: Why anatomy needs its own language</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/uBGl2BujkPQ" title="Introduction to Anatomy & Physiology: Crash Course A&P #1" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">CrashCourse — Introduction to Anatomy &amp; Physiology #1 · <a href="https://www.youtube.com/watch?v=uBGl2BujkPQ" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="0"></div>
+</section>
+
+<!-- ============ 1 STRUCTURE ============ -->
+<section class="sec" id="s1" style="--accent:#e84393">
+  <h2>🧩 Structure of Medical Terms</h2>
+  <p class="sub">Medical words are like LEGO® — a few blocks snapped together.</p>
+  <p>Most medical terms are built from <b>three main components</b>:</p>
+  <figure>
+    <svg viewBox="0 0 560 170" width="560" aria-label="Prefix, root and suffix blocks">
+      <rect x="10" y="30" width="160" height="70" rx="14" fill="#e84393"/>
+      <text x="90" y="62" text-anchor="middle" fill="#fff" font-size="22" font-weight="800" font-family="Segoe UI,Arial">PREFIX</text>
+      <text x="90" y="86" text-anchor="middle" fill="#fff" font-size="14" font-family="Segoe UI,Arial">at the beginning</text>
+      <text x="185" y="74" font-size="30" fill="#636e72" font-weight="800">+</text>
+      <rect x="205" y="20" width="160" height="90" rx="14" fill="#0984e3"/>
+      <text x="285" y="60" text-anchor="middle" fill="#fff" font-size="24" font-weight="800" font-family="Segoe UI,Arial">ROOT</text>
+      <text x="285" y="86" text-anchor="middle" fill="#fff" font-size="14" font-family="Segoe UI,Arial">the core meaning</text>
+      <text x="380" y="74" font-size="30" fill="#636e72" font-weight="800">+</text>
+      <rect x="400" y="30" width="150" height="70" rx="14" fill="#00b894"/>
+      <text x="475" y="62" text-anchor="middle" fill="#fff" font-size="22" font-weight="800" font-family="Segoe UI,Arial">SUFFIX</text>
+      <text x="475" y="86" text-anchor="middle" fill="#fff" font-size="14" font-family="Segoe UI,Arial">at the end</text>
+      <text x="90" y="135" text-anchor="middle" fill="#e84393" font-size="16" font-weight="700" font-family="Segoe UI,Arial">tachy- (fast)</text>
+      <text x="285" y="135" text-anchor="middle" fill="#0984e3" font-size="16" font-weight="700" font-family="Segoe UI,Arial">cardi (heart)</text>
+      <text x="475" y="135" text-anchor="middle" fill="#00b894" font-size="16" font-weight="700" font-family="Segoe UI,Arial">-ia (condition)</text>
+      <text x="280" y="162" text-anchor="middle" fill="#1f2a44" font-size="16" font-weight="800" font-family="Segoe UI,Arial">TACHYCARDIA = a fast heart rate</text>
+    </svg>
+  </figure>
+  <div class="tscroll"><table class="tbl stack">
+    <thead><tr><th>Component</th><th>Meaning</th><th>Example</th><th>Meaning of example</th></tr></thead>
+    <tbody>
+      <tr><td class="root">Root</td><td data-l="Meaning">Core meaning (often from Greek or Latin)</td><td data-l="Example"><i>cardi</i></td><td data-l="Means">heart</td></tr>
+      <tr><td class="pre">Prefix</td><td data-l="Meaning">Comes before the root; modifies its meaning</td><td data-l="Example"><i>tachy-</i></td><td data-l="Means">fast</td></tr>
+      <tr><td class="suf">Suffix</td><td data-l="Meaning">Comes after the root; tells you the condition, procedure or specialty</td><td data-l="Example"><i>-itis</i></td><td data-l="Means">inflammation</td></tr>
+    </tbody></table></div>
+
+  <h3>✨ Simple examples</h3>
+  <div class="grid2">
+    <div class="eg"><div class="w"><span class="pre">peri</span><span class="root">card</span><span class="suf">itis</span></div>around + heart + inflammation → <b>inflammation of the sac around the heart</b></div>
+    <div class="eg"><div class="w"><span class="pre">brady</span><span class="root">card</span><span class="suf">ia</span></div>slow + heart + condition → <b>a slow heart rate</b></div>
+    <div class="eg"><div class="w"><span class="root">gastr</span><span class="suf">itis</span></div>stomach + inflammation → <b>inflammation of the stomach</b> (no prefix needed!)</div>
+    <div class="eg"><div class="w"><span class="root">hepat</span><span class="pill v">o</span><span class="suf">megaly</span></div>liver + enlargement → <b>an enlarged liver</b></div>
+  </div>
+
+  <div class="box tip"><b class="lab">🔑 Two golden rules</b>
+  <b>1. Read from the END:</b> start with the suffix, then the prefix, then the root. <i>Pericarditis</i> → “inflammation… around… the heart”.<br>
+  <b>2. The combining vowel “o”:</b> add <span class="pill v">o</span> when the suffix starts with a consonant (<i>cardi<b>o</b>logy</i>, <i>gastr<b>o</b>scopy</i>), but drop it when the suffix starts with a vowel (<i>gastr-itis</i>, not “gastr<b>o</b>itis”).</div>
+
+  <div class="builder">
+    <h3 style="margin-top:0;text-align:center">🛠️ Try it: Medical Word Builder</h3>
+    <p style="text-align:center;margin:0 0 8px;font-size:14px">Pick a block from each box and see what word you build. Some combinations are real medical terms — others are made-up, but you can still decode them!</p>
+    <div class="sel">
+      <select id="bPre" aria-label="Prefix"></select>
+      <b>+</b><select id="bRoot" aria-label="Root"></select>
+      <b>+</b><select id="bSuf" aria-label="Suffix"></select>
+    </div>
+    <div class="bout"><div class="word" id="bWord"></div><div class="mean" id="bMean"></div><span class="flag" id="bFlag"></span></div>
+  </div>
+
+  <div class="video"><div class="vh">🎬 Video: Prefix, Root, Suffix</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/WJumaPino3Q" title="Medical Terminology - Prefix, Root, Suffix" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Medicosis Perfectionalis · <a href="https://www.youtube.com/watch?v=WJumaPino3Q" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="1"></div>
+</section>
+
+<!-- ============ 2 PREFIXES ============ -->
+<section class="sec" id="s2" style="--accent:#d63031">
+  <h2>⬅️ Common Prefixes</h2>
+  <p class="sub">The prefix tells you <b>where, how much, how fast</b> or <b>when</b>.</p>
+  <p>You already know many prefixes from everyday English — look at the <span class="everyday">everyday clue</span> column!</p>
+  <div class="tscroll"><table class="tbl stack">
+    <thead><tr><th>Prefix</th><th>Meaning</th><th>Medical example</th><th>Meaning</th><th>Everyday clue</th></tr></thead>
+    <tbody>
+      <tr><td class="pre">a- / an-</td><td data-l="Meaning">Without, absence of</td><td data-l="Example">Aseptic</td><td data-l="Means">Without infection</td><td data-l="Clue" class="everyday">anonymous = without a name</td></tr>
+      <tr><td class="pre">hyper-</td><td data-l="Meaning">Above, excessive</td><td data-l="Example">Hypertension</td><td data-l="Means">High blood pressure</td><td data-l="Clue" class="everyday">a hyperactive child</td></tr>
+      <tr><td class="pre">hypo-</td><td data-l="Meaning">Below, deficient</td><td data-l="Example">Hypoglycaemia</td><td data-l="Means">Low blood sugar</td><td data-l="Clue" class="everyday">hypodermic needle (goes under the skin)</td></tr>
+      <tr><td class="pre">peri-</td><td data-l="Meaning">Around</td><td data-l="Example">Pericardium</td><td data-l="Means">Sac around the heart</td><td data-l="Clue" class="everyday">perimeter = the distance around</td></tr>
+      <tr><td class="pre">sub-</td><td data-l="Meaning">Under, below</td><td data-l="Example">Subcutaneous</td><td data-l="Means">Under the skin</td><td data-l="Clue" class="everyday">submarine = under the sea</td></tr>
+      <tr><td class="pre">intra-</td><td data-l="Meaning">Within, inside</td><td data-l="Example">Intravenous (IV)</td><td data-l="Means">Within a vein</td><td data-l="Clue" class="everyday">intranet = a network inside one organisation</td></tr>
+      <tr><td class="pre">inter-</td><td data-l="Meaning">Between</td><td data-l="Example">Intercostal</td><td data-l="Means">Between the ribs</td><td data-l="Clue" class="everyday">international = between nations</td></tr>
+      <tr><td class="pre">tachy-</td><td data-l="Meaning">Fast</td><td data-l="Example">Tachycardia</td><td data-l="Means">Fast heart rate</td><td data-l="Clue" class="everyday">tachometer = car's speed (rpm) gauge</td></tr>
+      <tr><td class="pre">brady-</td><td data-l="Meaning">Slow</td><td data-l="Example">Bradycardia</td><td data-l="Means">Slow heart rate</td><td data-l="Clue" class="everyday">“brady” — think of a slow, lazy Brady</td></tr>
+      <tr><td class="pre">poly-</td><td data-l="Meaning">Many, much</td><td data-l="Example">Polyuria</td><td data-l="Means">Passing large amounts of urine</td><td data-l="Clue" class="everyday">polygon = many-sided shape</td></tr>
+    </tbody></table></div>
+
+  <div class="box warn"><b class="lab">⚠️ Don't mix these up!</b>
+  <b>hyper-</b> (too much) vs <b>hypo-</b> (too little) — <i>hyperglycaemia</i> and <i>hypoglycaemia</i> are opposite emergencies.<br>
+  <b>inter-</b> (between) vs <b>intra-</b> (within) — an <i>intercostal</i> drain goes <u>between</u> ribs; an <i>intravenous</i> drip goes <u>inside</u> a vein.</div>
+
+  <figure>
+    <svg viewBox="0 0 520 150" width="520" aria-label="Diagram showing intra, inter, sub and peri">
+      <rect x="20" y="40" width="100" height="70" rx="10" fill="#ffeaa7" stroke="#e17055" stroke-width="3"/>
+      <circle cx="70" cy="75" r="14" fill="#d63031"/><text x="70" y="135" text-anchor="middle" font-size="15" font-weight="700" fill="#d63031" font-family="Segoe UI,Arial">intra- (within)</text>
+      <rect x="150" y="40" width="40" height="70" rx="8" fill="#ffeaa7" stroke="#e17055" stroke-width="3"/>
+      <rect x="230" y="40" width="40" height="70" rx="8" fill="#ffeaa7" stroke="#e17055" stroke-width="3"/>
+      <circle cx="210" cy="75" r="14" fill="#d63031"/><text x="210" y="135" text-anchor="middle" font-size="15" font-weight="700" fill="#d63031" font-family="Segoe UI,Arial">inter- (between)</text>
+      <rect x="300" y="35" width="90" height="38" rx="8" fill="#ffeaa7" stroke="#e17055" stroke-width="3"/>
+      <circle cx="345" cy="95" r="14" fill="#d63031"/><text x="345" y="135" text-anchor="middle" font-size="15" font-weight="700" fill="#d63031" font-family="Segoe UI,Arial">sub- (under)</text>
+      <circle cx="465" cy="75" r="26" fill="#ffeaa7" stroke="#e17055" stroke-width="3"/>
+      <circle cx="465" cy="75" r="40" fill="none" stroke="#d63031" stroke-width="5" stroke-dasharray="8 6"/>
+      <text x="465" y="135" text-anchor="middle" font-size="15" font-weight="700" fill="#d63031" font-family="Segoe UI,Arial">peri- (around)</text>
+    </svg>
+    <figcaption>Where is the red dot? Prefixes of position.</figcaption>
+  </figure>
+
+  <div class="video"><div class="vh">🎬 Video: Prefixes made easy</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/uVm91-NH5Ek" title="Medical and Nursing Terminology MADE EASY: Prefixes" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Simplico · <a href="https://www.youtube.com/watch?v=uVm91-NH5Ek" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="2"></div>
+</section>
+
+<!-- ============ 3 SUFFIXES ============ -->
+<section class="sec" id="s3" style="--accent:#00a884">
+  <h2>➡️ Common Suffixes</h2>
+  <p class="sub">The suffix tells you <b>what is happening</b>: a disease, a procedure or a specialty.</p>
+  <div class="tscroll"><table class="tbl stack">
+    <thead><tr><th>Suffix</th><th>Meaning</th><th>Medical example</th><th>Meaning</th><th>Everyday clue</th></tr></thead>
+    <tbody>
+      <tr><td class="suf">-itis</td><td data-l="Meaning">Inflammation</td><td data-l="Example">Gastritis</td><td data-l="Means">Inflammation of the stomach</td><td data-l="Clue" class="everyday">tonsillitis — you probably had it as a child</td></tr>
+      <tr><td class="suf">-oma</td><td data-l="Meaning">Tumour, swelling</td><td data-l="Example">Lipoma</td><td data-l="Means">Benign fatty tumour</td><td data-l="Clue" class="everyday">lip/o = fat (think “liposuction”)</td></tr>
+      <tr><td class="suf">-ectomy</td><td data-l="Meaning">Surgical removal</td><td data-l="Example">Appendicectomy</td><td data-l="Means">Removal of the appendix</td><td data-l="Clue" class="everyday">ec = out + tom = cut → “cut out”</td></tr>
+      <tr><td class="suf">-algia</td><td data-l="Meaning">Pain</td><td data-l="Example">Neuralgia</td><td data-l="Means">Nerve pain</td><td data-l="Clue" class="everyday">nostalgia = “pain” of longing for home</td></tr>
+      <tr><td class="suf">-logy</td><td data-l="Meaning">Study of</td><td data-l="Example">Pathology</td><td data-l="Means">Study of disease</td><td data-l="Clue" class="everyday">biology, geology</td></tr>
+      <tr><td class="suf">-aemia</td><td data-l="Meaning">Blood condition</td><td data-l="Example">Anaemia</td><td data-l="Means">Lack of red cells / haemoglobin</td><td data-l="Clue" class="everyday">US spelling: -emia (anemia)</td></tr>
+      <tr><td class="suf">-megaly</td><td data-l="Meaning">Enlargement</td><td data-l="Example">Cardiomegaly</td><td data-l="Means">Enlarged heart</td><td data-l="Clue" class="everyday">mega = big (megabyte, megastore)</td></tr>
+      <tr><td class="suf">-scopy</td><td data-l="Meaning">Looking inside with an instrument</td><td data-l="Example">Endoscopy</td><td data-l="Means">Looking inside with a camera tube</td><td data-l="Clue" class="everyday">telescope, microscope</td></tr>
+    </tbody></table></div>
+
+  <div class="box fun"><b class="lab">✂️ The three “cutting” suffixes — a classic exam favourite</b>
+  <div class="grid3" style="margin-top:6px">
+    <div><span class="pill s">-otomy</span> = <b>cut into</b><br><i>tracheotomy</i>: an incision into the trachea</div>
+    <div><span class="pill s">-ostomy</span> = <b>make an opening</b> (mouth)<br><i>colostomy</i>: an opening of the colon onto the skin</div>
+    <div><span class="pill s">-ectomy</span> = <b>cut out / remove</b><br><i>tonsillectomy</i>: removal of the tonsils</div>
+  </div></div>
+
+  <div class="box clin"><b class="lab">🏥 In the hospital</b>
+  Every department's name is a suffix lesson: Cardi<b>ology</b>, Neur<b>ology</b>, Nephr<b>ology</b>, Path<b>ology</b>… and the doctors are Cardi<b>ologists</b>, Neur<b>ologists</b>… (<i>-logist</i> = specialist who studies).</div>
+
+  <div class="video"><div class="vh">🎬 Video: Suffixes made easy</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/PDVq6KwtHCE" title="Medical Terminology: Suffixes MADE EASY" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Simplico · <a href="https://www.youtube.com/watch?v=PDVq6KwtHCE" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="3"></div>
+</section>
+
+<!-- ============ 4 ROOTS ============ -->
+<section class="sec" id="s4" style="--accent:#0984e3">
+  <h2>🌳 Common Root Words</h2>
+  <p class="sub">The root names the <b>organ or body part</b>. Learn the root — unlock dozens of words.</p>
+  <div class="tscroll"><table class="tbl stack">
+    <thead><tr><th>Root</th><th>Meaning</th><th>Example</th><th>Meaning</th><th>Also seen in…</th></tr></thead>
+    <tbody>
+      <tr><td class="root">❤️ cardi/o</td><td data-l="Meaning">Heart</td><td data-l="Example">Cardiology</td><td data-l="Means">Study of the heart</td><td data-l="Also" class="everyday">“cardio” workout; ECG = electro<b>cardio</b>gram</td></tr>
+      <tr><td class="root">🟤 hepat/o</td><td data-l="Meaning">Liver</td><td data-l="Example">Hepatitis</td><td data-l="Means">Inflammation of the liver</td><td data-l="Also" class="everyday">hepatomegaly, hepatocyte</td></tr>
+      <tr><td class="root">🫘 nephr/o</td><td data-l="Meaning">Kidney</td><td data-l="Example">Nephrology</td><td data-l="Means">Study of the kidneys</td><td data-l="Also" class="everyday">nephron, nephrectomy</td></tr>
+      <tr><td class="root">🧠 neur/o</td><td data-l="Meaning">Nerve</td><td data-l="Example">Neurology</td><td data-l="Means">Study of the nervous system</td><td data-l="Also" class="everyday">neuron, neuralgia</td></tr>
+      <tr><td class="root">🖐️ derm/o, dermat/o</td><td data-l="Meaning">Skin</td><td data-l="Example">Dermatology</td><td data-l="Means">Study of the skin</td><td data-l="Also" class="everyday">epidermis, dermatitis</td></tr>
+      <tr><td class="root">🦴 oste/o</td><td data-l="Meaning">Bone</td><td data-l="Example">Osteoporosis</td><td data-l="Means">Porous, weakened bones</td><td data-l="Also" class="everyday">osteoma, osteomyelitis</td></tr>
+      <tr><td class="root">🍽️ gastr/o</td><td data-l="Meaning">Stomach</td><td data-l="Example">Gastroenterology</td><td data-l="Means">Study of the stomach and intestines</td><td data-l="Also" class="everyday">gastric juice, gastritis</td></tr>
+      <tr><td class="root">🦵 arthr/o</td><td data-l="Meaning">Joint</td><td data-l="Example">Arthritis</td><td data-l="Means">Inflammation of a joint</td><td data-l="Also" class="everyday">arthroscopy</td></tr>
+    </tbody></table></div>
+
+  <div class="box fun"><b class="lab">👯 Greek vs Latin twins</b>
+  Many organs have <b>two</b> roots — a Greek one (used mostly for diseases & specialties) and a Latin one (used mostly for anatomy & adjectives).
+  <div class="tscroll"><table class="tbl" style="--accent:#a29bfe;margin-top:8px">
+    <thead><tr><th>Organ</th><th>Greek root</th><th>Latin root</th></tr></thead>
+    <tbody>
+      <tr><td>Kidney</td><td><i>nephr</i>itis</td><td><i>ren</i>al artery</td></tr>
+      <tr><td>Skin</td><td><i>dermat</i>ology</td><td>sub<i>cutane</i>ous</td></tr>
+      <tr><td>Mouth</td><td><i>stomat</i>itis</td><td><i>or</i>al</td></tr>
+      <tr><td>Eye</td><td><i>ophthalm</i>ology</td><td><i>ocul</i>ar</td></tr>
+      <tr><td>Bone</td><td><i>oste</i>oporosis</td><td><i>osse</i>ous</td></tr>
+    </tbody></table></div></div>
+
+  <div class="video"><div class="vh">🎬 Video: Root words made easy</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/-lTOvwdRIBg" title="Medical Terminology MADE EASY: Root Words" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Simplico · <a href="https://www.youtube.com/watch?v=-lTOvwdRIBg" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="4"></div>
+</section>
+
+<!-- ============ 5 ANATOMICAL POSITION ============ -->
+<section class="sec" id="s5" style="--accent:#e17055">
+  <h2>🧍 Anatomical Terminology — Basic Orientation</h2>
+  <p class="sub">Before “left” and “above” mean anything, everyone must picture the body the same way.</p>
+  <div class="grid2">
+    <div>
+      <h3 style="margin-top:0">The anatomical position</h3>
+      <p>The body is <b>standing upright</b>, <b>facing forward</b>, feet together, <b>arms at the sides</b> and <b>palms facing forward</b> (thumbs pointing away from the body).</p>
+      <div class="box tip"><b class="lab">🧠 Tip</b>Always describe structures as if the person is in the anatomical position — even if they are lying in bed, sitting, or upside-down on a gym bar!</div>
+      <div class="box warn"><b class="lab">↔️ Whose right?</b>“Right” and “left” always mean the <b>patient's</b> right and left — not yours. When you face a patient, their right side is on <u>your</u> left.</div>
+      <p style="margin-bottom:4px"><b>Tap a term to see it on the figure:</b></p>
+      <div class="dbtns" id="dirBtns">
+        <button class="dbtn" data-a="sup">Superior</button><button class="dbtn" data-a="inf">Inferior</button>
+        <button class="dbtn" data-a="med">Medial</button><button class="dbtn" data-a="lat">Lateral</button>
+        <button class="dbtn" data-a="prox">Proximal</button><button class="dbtn" data-a="dist">Distal</button>
+      </div>
+      <p id="dirText" style="text-align:center;font-weight:600;min-height:28px;color:#e17055"></p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 320 460" width="300" aria-label="Figure in anatomical position with direction arrows">
+        <defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,1 L16,8 L0,15 z" fill="context-stroke"/></marker>
+        <marker id="ahO" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,1 L16,8 L0,15 z" fill="#e17055"/></marker>
+        <marker id="ahB" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,1 L16,8 L0,15 z" fill="#0984e3"/></marker>
+        <marker id="ahG" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,1 L16,8 L0,15 z" fill="#00b894"/></marker>
+        <marker id="ahP" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,1 L16,8 L0,15 z" fill="#6c5ce7"/></marker></defs>
+        <line x1="160" y1="0" x2="160" y2="450" stroke="#b2bec3" stroke-dasharray="6 6" stroke-width="2"/>
+        <text x="166" y="448" font-size="11" fill="#636e72" font-family="Segoe UI,Arial">midline</text>
+        <!-- body -->
+        <g stroke="#f3c6a5" stroke-linecap="round" fill="none">
+          <line x1="122" y1="118" x2="96" y2="200" stroke-width="20"/><line x1="96" y1="200" x2="86" y2="275" stroke-width="17"/>
+          <line x1="198" y1="118" x2="224" y2="200" stroke-width="20"/><line x1="224" y1="200" x2="234" y2="275" stroke-width="17"/>
+          <line x1="142" y1="260" x2="138" y2="350" stroke-width="26"/><line x1="138" y1="350" x2="136" y2="425" stroke-width="22"/>
+          <line x1="178" y1="260" x2="182" y2="350" stroke-width="26"/><line x1="182" y1="350" x2="184" y2="425" stroke-width="22"/>
+        </g>
+        <path d="M118,108 Q160,96 202,108 L196,200 Q190,240 188,268 L132,268 Q130,240 124,200 Z" fill="#f3c6a5"/>
+        <rect x="150" y="80" width="20" height="26" fill="#f3c6a5"/>
+        <circle cx="160" cy="58" r="30" fill="#f3c6a5"/>
+        <path d="M130,52 Q132,24 160,24 Q190,24 190,52 Q182,36 160,36 Q140,36 130,52Z" fill="#2d3436"/>
+        <!-- palms forward -->
+        <ellipse cx="84" cy="292" rx="11" ry="17" fill="#f7d7bf" stroke="#e1a98a"/>
+        <ellipse cx="236" cy="292" rx="11" ry="17" fill="#f7d7bf" stroke="#e1a98a"/>
+        <line x1="74" y1="282" x2="66" y2="292" stroke="#f3c6a5" stroke-width="6" stroke-linecap="round"/>
+        <line x1="246" y1="282" x2="254" y2="292" stroke="#f3c6a5" stroke-width="6" stroke-linecap="round"/>
+        <ellipse cx="132" cy="433" rx="16" ry="7" fill="#f3c6a5"/><ellipse cx="188" cy="433" rx="16" ry="7" fill="#f3c6a5"/>
+        <circle cx="149" cy="56" r="3" fill="#2d3436"/><circle cx="171" cy="56" r="3" fill="#2d3436"/>
+        <path d="M150,72 Q160,78 170,72" stroke="#c0392b" stroke-width="2" fill="none"/>
+        <!-- arrows -->
+        <g class="arr" id="a-sup"><line x1="290" y1="200" x2="290" y2="60" stroke="#e17055" stroke-width="5" marker-end="url(#ahO)"/><text x="316" y="44" text-anchor="end" font-size="14" font-weight="700" fill="#e17055" font-family="Segoe UI,Arial">Superior</text></g>
+        <g class="arr" id="a-inf"><line x1="290" y1="230" x2="290" y2="380" stroke="#e17055" stroke-width="5" marker-end="url(#ahO)"/><text x="316" y="404" text-anchor="end" font-size="14" font-weight="700" fill="#e17055" font-family="Segoe UI,Arial">Inferior</text></g>
+        <g class="arr" id="a-med"><line x1="18" y1="178" x2="146" y2="178" stroke="#0984e3" stroke-width="5" marker-end="url(#ahB)"/><text x="18" y="170" font-size="14" font-weight="700" fill="#0984e3" font-family="Segoe UI,Arial">Medial</text></g>
+        <g class="arr" id="a-lat"><line x1="174" y1="178" x2="306" y2="178" stroke="#0984e3" stroke-width="5" marker-end="url(#ahB)"/><text x="306" y="170" text-anchor="end" font-size="14" font-weight="700" fill="#0984e3" font-family="Segoe UI,Arial">Lateral</text></g>
+        <g class="arr" id="a-prox"><line x1="60" y1="270" x2="88" y2="140" stroke="#00b894" stroke-width="5" marker-end="url(#ahG)"/><text x="4" y="136" font-size="14" font-weight="700" fill="#00b894" font-family="Segoe UI,Arial">Proximal</text></g>
+        <g class="arr" id="a-dist"><line x1="58" y1="190" x2="54" y2="318" stroke="#6c5ce7" stroke-width="5" marker-end="url(#ahP)"/><text x="10" y="338" font-size="14" font-weight="700" fill="#6c5ce7" font-family="Segoe UI,Arial">Distal</text></g>
+      </svg>
+      <figcaption>Anatomical position: upright, facing forward, palms forward.</figcaption>
+    </figure>
+  </div>
+
+  <h3>📍 Directional terms</h3>
+  <div class="tscroll"><table class="tbl stack">
+    <thead><tr><th>Term</th><th>Meaning</th><th>Simple example (try it on yourself!)</th></tr></thead>
+    <tbody>
+      <tr><td>Anterior (ventral)</td><td data-l="Meaning">Front</td><td data-l="Example">The sternum (breastbone) is anterior to the spine</td></tr>
+      <tr><td>Posterior (dorsal)</td><td data-l="Meaning">Back</td><td data-l="Example">The spine is posterior to the heart · a dolphin's <i>dorsal</i> fin is on its back 🐬</td></tr>
+      <tr><td>Superior (cranial)</td><td data-l="Meaning">Above, towards the head</td><td data-l="Example">The head is superior to the neck</td></tr>
+      <tr><td>Inferior (caudal)</td><td data-l="Meaning">Below, towards the feet</td><td data-l="Example">The stomach is inferior to the heart</td></tr>
+      <tr><td>Medial</td><td data-l="Meaning">Towards the midline</td><td data-l="Example">The nose is medial to the eyes</td></tr>
+      <tr><td>Lateral</td><td data-l="Meaning">Away from the midline</td><td data-l="Example">The ears are lateral to the eyes</td></tr>
+      <tr><td>Proximal</td><td data-l="Meaning">Nearer the point of attachment (limbs)</td><td data-l="Example">The shoulder is proximal to the elbow</td></tr>
+      <tr><td>Distal</td><td data-l="Meaning">Further from the point of attachment</td><td data-l="Example">The fingers are distal to the elbow</td></tr>
+      <tr><td>Superficial</td><td data-l="Meaning">Towards the surface</td><td data-l="Example">The skin is superficial to the muscles</td></tr>
+      <tr><td>Deep</td><td data-l="Meaning">Away from the surface</td><td data-l="Example">The bones are deep to the muscles</td></tr>
+    </tbody></table></div>
+  <div class="box tip"><b class="lab">🧠 Memory hooks</b>
+  <b>Proximal</b> ≈ <b>prox</b>imity (close) · <b>Distal</b> ≈ <b>dist</b>ant · <b>Lateral</b> → think “<b>lat</b>s” — the latissimus muscles at the sides of your back.</div>
+
+  <div class="video"><div class="vh">🎬 Video: Anatomical position and directional terms</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/t6-ueqFK1IE" title="Anatomical Position and Directional Terms [Anatomy MADE EASY]" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Simplico · <a href="https://www.youtube.com/watch?v=t6-ueqFK1IE" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="5"></div>
+</section>
+
+<!-- ============ 6 PLANES ============ -->
+<section class="sec" id="s6" style="--accent:#00a3a3">
+  <h2>🔪 Body Planes and Sections</h2>
+  <p class="sub">Imaginary flat surfaces that “slice” the body — exactly how CT and MRI scans show it.</p>
+  <div class="grid2">
+    <figure><img src="data:image/jpeg;base64,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" alt="The three body planes: sagittal, frontal (coronal) and transverse"><figcaption>The three main body planes.</figcaption></figure>
+    <div>
+      <div class="tscroll"><table class="tbl stack">
+        <thead><tr><th>Plane</th><th>Divides body into</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Sagittal</td><td data-l="Divides">Right and left parts</td><td data-l="Example">A cut straight down through the nose (median/midsagittal = two equal halves)</td></tr>
+          <tr><td>Coronal (frontal)</td><td data-l="Divides">Front (anterior) and back (posterior)</td><td data-l="Example">Separates the face from the back of the head</td></tr>
+          <tr><td>Transverse (axial / horizontal)</td><td data-l="Divides">Upper (superior) and lower (inferior)</td><td data-l="Example">A cut across the abdomen at the level of the navel</td></tr>
+        </tbody></table></div>
+    </div>
+  </div>
+  <div class="box fun"><b class="lab">🍞 Think of a loaf of bread</b>
+  <div class="grid3" style="margin-top:6px">
+    <div>🍞 <b>Transverse</b> = cutting the loaf into <b>slices</b> — like the slices of a CT scan.</div>
+    <div>👑 <b>Coronal</b> = the line where a <b>crown</b> sits, ear to ear — splits front from back.</div>
+    <div>🏹 <b>Sagittal</b> = from <i>sagitta</i> (Latin: arrow) — an arrow shot straight through you front-to-back splits left from right.</div>
+  </div></div>
+  <div class="box clin"><b class="lab">🏥 In the clinic</b>A CT scan of the abdomen is viewed as <b>transverse (axial) sections</b> — as if you are standing at the patient's feet looking up. That's why the liver appears on the <u>left</u> side of the screen!</div>
+
+  <div class="video"><div class="vh">🎬 Video: Easy tricks for body planes and sections</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/iQB7baJA9wY" title="EASY TRICKS for Anatomical Body Planes and Sections" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Simplico · <a href="https://www.youtube.com/watch?v=iQB7baJA9wY" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="6"></div>
+</section>
+
+<!-- ============ 7 CAVITIES & REGIONS ============ -->
+<section class="sec" id="s7" style="--accent:#6c5ce7">
+  <h2>🫁 Body Cavities and Regions</h2>
+  <p class="sub">The body's “rooms” — and the 9-square map doctors use to describe tummy pain.</p>
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 260 380" width="250" aria-label="Major body cavities">
+        <circle cx="130" cy="58" r="44" fill="#f3c6a5"/>
+        <path d="M70,120 Q130,100 190,120 L184,300 Q130,322 76,300 Z" fill="#f3c6a5"/>
+        <rect x="118" y="98" width="24" height="20" fill="#f3c6a5"/>
+        <ellipse cx="130" cy="52" rx="34" ry="28" fill="#a29bfe"/>
+        <path d="M82,128 Q130,114 178,128 L176,190 Q130,206 84,190Z" fill="#74b9ff"/>
+        <path d="M84,198 Q130,214 176,198 L178,260 L82,260Z" fill="#fdcb6e"/>
+        <path d="M82,264 L178,264 L182,296 Q130,316 78,296Z" fill="#55efc4"/>
+        <path d="M84,194 Q130,210 176,194" stroke="#d63031" stroke-width="4" fill="none"/>
+        <g font-family="Segoe UI,Arial" font-size="13" font-weight="700">
+          <text x="130" y="57" text-anchor="middle" fill="#2d3436">Cranial</text>
+          <text x="130" y="165" text-anchor="middle" fill="#2d3436">Thoracic</text>
+          <text x="130" y="238" text-anchor="middle" fill="#2d3436">Abdominal</text>
+          <text x="130" y="288" text-anchor="middle" fill="#2d3436">Pelvic</text>
+          <text x="196" y="200" fill="#d63031" font-size="11">diaphragm</text>
+        </g>
+        <g font-family="Segoe UI,Arial" font-size="12"><rect x="10" y="335" width="12" height="12" fill="#a29bfe"/><text x="26" y="346">brain</text>
+        <rect x="70" y="335" width="12" height="12" fill="#74b9ff"/><text x="86" y="346">lungs, heart</text>
+        <rect x="10" y="355" width="12" height="12" fill="#fdcb6e"/><text x="26" y="366">digestive organs</text>
+        <rect x="130" y="355" width="12" height="12" fill="#55efc4"/><text x="146" y="366">bladder, reproductive</text></g>
+      </svg>
+      <figcaption>Major body cavities. The diaphragm separates thorax from abdomen.</figcaption>
+    </figure>
+    <div>
+      <h3 style="margin-top:0">Major body cavities</h3>
+      <ul>
+        <li><b style="color:#7c6cf0">Cranial cavity</b> — contains the brain</li>
+        <li><b style="color:#0984e3">Thoracic cavity</b> — contains the lungs and heart</li>
+        <li><b style="color:#d39e00">Abdominal cavity</b> — contains the digestive organs</li>
+        <li><b style="color:#00a884">Pelvic cavity</b> — contains the urinary bladder and reproductive organs</li>
+      </ul>
+      <div class="box tip"><b class="lab">🧠 Tip</b>The abdominal and pelvic cavities are continuous — together called the <b>abdominopelvic cavity</b>. The <b>diaphragm</b> is the muscular “floor” of the thorax.</div>
+    </div>
+  </div>
+
+  <h3>🗺️ The nine abdominal regions <span class="badge">tap a region</span></h3>
+  <div class="abd-wrap">
+    <svg viewBox="0 0 300 330" width="320" aria-label="Clickable nine abdominal regions">
+      <path d="M40,20 Q150,0 260,20 L270,250 Q260,310 150,320 Q40,310 30,250 Z" fill="#f3c6a5"/>
+      <path d="M60,60 Q150,110 240,60" stroke="#e1a98a" stroke-width="3" fill="none"/>
+      <circle cx="150" cy="165" r="5" fill="#c58b6a"/>
+      <clipPath id="torsoClip"><path d="M40,20 Q150,0 260,20 L270,250 Q260,310 150,320 Q40,310 30,250 Z"/></clipPath><g id="regions" stroke="#fff" stroke-width="3" fill-opacity=".35" clip-path="url(#torsoClip)"></g>
+      <line x1="110" y1="10" x2="110" y2="316" stroke="#2d3436" stroke-dasharray="6 5" stroke-width="2"/>
+      <line x1="190" y1="10" x2="190" y2="316" stroke="#2d3436" stroke-dasharray="6 5" stroke-width="2"/>
+      <line x1="34" y1="115" x2="266" y2="115" stroke="#2d3436" stroke-dasharray="6 5" stroke-width="2"/>
+      <line x1="34" y1="215" x2="266" y2="215" stroke="#2d3436" stroke-dasharray="6 5" stroke-width="2"/>
+      <g id="rlabels" font-family="Segoe UI,Arial" font-size="20" font-weight="800" fill="#2d3436" text-anchor="middle" pointer-events="none"></g>
+      <text x="150" y="328" text-anchor="middle" font-size="11" fill="#636e72" font-family="Segoe UI,Arial">Patient facing you — patient's RIGHT is on YOUR left</text>
+    </svg>
+    <div class="abd-info" id="abdInfo"><b>Tap any region</b> to see its name and the organs found there.<br><br>
+    <span style="font-size:14px;color:#5b6785">Two vertical lines (mid-clavicular) + two horizontal lines (subcostal and transtubercular planes) divide the abdomen like a noughts-and-crosses (tic-tac-toe) grid.</span></div>
+  </div>
+  <div class="box clin"><b class="lab">🏥 Why it matters — the wandering pain of appendicitis</b>
+  Early appendicitis often starts as a vague pain in the <b>umbilical</b> region (around the belly button) and then moves to the <b>right iliac</b> region. Just by naming the region, a doctor already narrows down the diagnosis!</div>
+
+  <div class="video"><div class="vh">🎬 Video: Four abdominal quadrants and nine abdominal regions</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/ELRzBa-eAAk" title="Four Abdominal Quadrants and Nine Abdominal Regions" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">RegisteredNurseRN · <a href="https://www.youtube.com/watch?v=ELRzBa-eAAk" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="7"></div>
+</section>
+
+<!-- ============ 8 CLINICAL TERMS ============ -->
+<section class="sec" id="s8" style="--accent:#e84393">
+  <h2>🩻 Commonly Used Clinical Terms</h2>
+  <p class="sub">Words you'll hear in your very first hospital visit. <b>Tap each card to flip it.</b></p>
+  <div class="grid3" id="flipGrid"></div>
+  <div class="box tip"><b class="lab">🧠 Symptom vs Sign</b>
+  <b>S</b>ymptom = what the patient <b>S</b>ays (“I feel dizzy”, “my chest hurts”).<br>
+  Sig<b>n</b> = what the doctor fi<b>n</b>ds — can be seen, felt or measured (fever of 39 °C, a pale tongue, BP 160/100 mmHg).</div>
+  <div class="box fun"><b class="lab">🔍 Pathology preview</b>
+  <i>Etiology</i> (aetiology) asks <b>“WHY</b> did the disease happen?” — e.g. <i>H. pylori</i> infection causes gastritis.<br>
+  <i>Pathogenesis</i> asks <b>“HOW</b> did it develop, step by step?” — e.g. bacteria → damage to stomach lining → inflammation → ulcer.<br>
+  You'll meet these two words in almost every pathology lecture!</div>
+  <div class="selfcheck" data-sec="8"></div>
+</section>
+
+<!-- ============ 9 MOVEMENTS ============ -->
+<section class="sec" id="s9" style="--accent:#fd7e14">
+  <h2>🤸 Terms of Movement</h2>
+  <p class="sub">Stand up and try each movement as you read — your body is the best textbook!</p>
+  <p>These terms describe joint and muscle actions and always refer to <b>movement from the anatomical position</b>.</p>
+  <div class="grid2" id="mvGrid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))"></div>
+  <div class="box tip"><b class="lab">🧠 Mnemonics</b>
+  <b>AB</b>duction — moving <b>A</b>way from the <b>B</b>ody · <b>ADD</b>uction — you <b>add</b> the limb back to the body.<br>
+  <b>Sup</b>ination — palm up, holding a bowl of <b>soup</b> 🍲 · <b>Pron</b>ation — palm down, like lying <b>prone</b> (face down).<br>
+  Flexion generally moves body parts <i>forward</i> (except at the knee and toes).</div>
+
+  <div class="video"><div class="vh">🎬 Video: Movement terms (flexion, extension, abduction, rotation, pronation, supination…)</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/P0K783Y4koY" title="Movement (Flexion, Extension, Abduction, Adduction, Circumduction, Rotation, Pronation, Supination)" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Medicosis Perfectionalis · <a href="https://www.youtube.com/watch?v=P0K783Y4koY" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="video"><div class="vh">🎬 Bonus video: Easiest way to remember movement terms</div>
+    <div class="frame"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/aRaLjN2cTYo" title="Easiest Way to Remember Movement Terms" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="vl">Corporis · <a href="https://www.youtube.com/watch?v=aRaLjN2cTYo" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div>
+  <div class="selfcheck" data-sec="9"></div>
+</section>
+
+<!-- ============ 10 SUMMARY ============ -->
+<section class="sec" id="s10" style="--accent:#20a35a">
+  <h2>🏁 Summary and Practice</h2>
+  <p class="sub">You made it! Let's put it all together.</p>
+  <h3>🔑 Key takeaways</h3>
+  <ul>
+    <li>Medical terms are built systematically from <span class="pre">prefixes</span>, <span class="root">roots</span> and <span class="suf">suffixes</span> — read them from the end.</li>
+    <li>Anatomical terminology describes <b>location and orientation</b> precisely — always from the anatomical position, using the <b>patient's</b> right and left.</li>
+    <li>Body planes, cavities and abdominal regions give everyone the same “map” of the body.</li>
+    <li>Using the correct term avoids miscommunication — and in medicine, miscommunication can harm patients.</li>
+  </ul>
+
+  <h3>✏️ Practice exercise — break it down</h3>
+  <p>Try each one on paper first, then reveal the answer.</p>
+  <div class="grid3" id="practice"></div>
+
+  <h3>📝 Decode the doctor's note</h3>
+  <p>This is a real-style clinical note. <b>Tap each highlighted word</b> to check your decoding.</p>
+  <div class="note" id="note">
+    <b>Mr Lim, 52 y/o.</b> Presented with 2/52 history of
+    <span class="dc" data-d="epi (above) + gastr (stomach) + -ic → the region above the stomach, upper-middle abdomen">epigastric</span> pain and one episode of
+    <span class="dc" data-d="haemat (blood) + -emesis (vomiting) → vomiting blood">haematemesis</span>. On examination: pale,
+    <span class="dc" data-d="tachy (fast) + card (heart) + -ia → fast heart rate (here 112 beats/min)">tachycardia</span>.
+    <span class="dc" data-d="endo (inside) + -scopy (looking with an instrument) → a camera tube passed inside to look at the stomach">Endoscopy</span>: ulcer in stomach;
+    <span class="dc" data-d="bi/o (life) + -opsy (viewing) → a small piece of living tissue taken to look at under the microscope">biopsy</span> taken.
+    <span class="dc" data-d="histo (tissue) + path/o (disease) + -logy (study) → microscopic study of diseased tissue">Histopathology</span>:
+    <span class="dc" data-d="non-cancerous">benign</span> gastric ulcer. Probable
+    <span class="dc" data-d="the cause of the disease">aetiology</span>: <i>H. pylori</i>.
+    <span class="dc" data-d="the predicted outcome">Prognosis</span>: good.
+  </div>
+  <div class="selfcheck" data-sec="10"></div>
+  <div class="score" id="finalScore" style="display:none"></div>
+</section>
+
+  <div class="nav" id="nav">
+    <button class="btn ghost" id="prevBtn">◀ Previous</button>
+    <span class="lockmsg" id="lockMsg"></span>
+    <button class="btn" id="nextBtn">Next ▶</button>
+  </div>
+  <footer>The Language of Medicine · MBBS Year 1 Pre-TBL Module · Videos are linked from YouTube for educational use and belong to their respective creators.</footer>
+</div>
+
+<script>
+(function(){
+var TITLES=["Welcome","Structure","Prefixes","Suffixes","Roots","Orientation","Planes","Cavities & Regions","Clinical Terms","Movement","Summary"];
+var N=TITLES.length;
+var QC=["#6c5ce7","#e84393","#0984e3","#00b894","#e17055","#fd7e14","#00a3a3","#d63031"];
+
+/* ---------- Self-check questions ---------- */
+var Q={
+0:[{s:"Why do doctors all over the world use standardised medical terminology?",o:["To make medicine sound complicated to patients","So that a term means exactly the same thing to every health professional, avoiding errors","Because English has no words for body parts","Only to pass exams"],a:1,e:"Standard terms are precise and universal — the same word means the same thing in KL, Chennai or London, which keeps patients safe."}],
+1:[{s:"In the word <b>pericarditis</b>, which part is the ROOT?",o:["peri","card","itis","pericard"],a:1,e:"<span class='pre'>peri</span> = prefix (around), <span class='root'>card</span> = root (heart), <span class='suf'>itis</span> = suffix (inflammation)."},
+   {s:"Which spelling correctly follows the combining-vowel rule?",o:["Gastroitis","Gastritis","Cardilogy","Hepatmegaly"],a:1,e:"Drop the 'o' before a suffix starting with a vowel (gastr + itis). Keep it before a consonant (cardi<b>o</b>logy, hepat<b>o</b>megaly)."}],
+2:[{s:"A patient's blood sugar is very LOW. Which term describes this?",o:["Hyperglycaemia","Hypoglycaemia","Polyglycaemia","Aglycaemia"],a:1,e:"<b>hypo-</b> = below/deficient. Hyper- would mean too high."},
+   {s:"An 'intercostal' muscle is found…",o:["Inside a rib","Under the skin","Between the ribs","Around the heart"],a:2,e:"<b>inter-</b> = between; cost = rib. Don't confuse with <b>intra-</b> (within)."}],
+3:[{s:"What does <b>hepatomegaly</b> mean?",o:["Inflammation of the liver","Removal of the liver","Enlargement of the liver","Pain in the liver"],a:2,e:"<b>-megaly</b> = enlargement. Inflammation would be hepat<b>itis</b>; removal would be hepat<b>ectomy</b>."},
+   {s:"A surgeon removes a patient's appendix. The operation is called an…",o:["Appendicitis","Appendicectomy","Appendicotomy","Appendicoma"],a:1,e:"<b>-ectomy</b> = surgical removal. -itis is the disease (inflammation), not the operation."}],
+4:[{s:"A patient is referred to the <b>nephrology</b> clinic. Which organ is the problem?",o:["Liver","Nerve","Kidney","Skin"],a:2,e:"<b>nephr/o</b> = kidney (Latin twin: <i>ren</i> → renal)."},
+   {s:"Using roots and suffixes, what is <b>osteoarthritis</b>?",o:["Inflammation of bone and joint","Tumour of bone","Study of joints","Removal of a joint"],a:0,e:"oste/o (bone) + arthr (joint) + -itis (inflammation). (Fun fact: OA is mainly 'wear-and-tear' — names don't always tell the full story!)"}],
+5:[{s:"Complete: 'The wrist is ______ to the elbow.'",o:["Proximal","Distal","Medial","Superior"],a:1,e:"The wrist is further from the shoulder (the limb's attachment) → <b>distal</b>."},
+   {s:"In the anatomical position, the thumb is ______ to the little finger.",o:["Medial","Lateral","Posterior","Deep"],a:1,e:"Palms face forward, so the thumb points away from the midline → <b>lateral</b>. This is why the anatomical position matters!"}],
+6:[{s:"A CT scan shows 'slices' of the abdomen dividing it into upper and lower parts. Which plane is this?",o:["Sagittal","Coronal","Transverse (axial)","Median"],a:2,e:"<b>Transverse</b> = horizontal slices dividing superior from inferior — like slices of bread."},
+   {s:"Which plane divides the body into FRONT and BACK parts?",o:["Sagittal","Coronal (frontal)","Transverse","Oblique"],a:1,e:"<b>Coronal (frontal)</b> — think of the line a crown makes from ear to ear."}],
+7:[{s:"A patient with early appendicitis often first feels pain around the belly button. Which region is this?",o:["Epigastric","Umbilical","Hypogastric","Right lumbar"],a:1,e:"The <b>umbilical</b> region surrounds the umbilicus (belly button). The pain later moves to the right iliac region."},
+   {s:"Which cavity contains the heart and lungs?",o:["Cranial","Thoracic","Abdominal","Pelvic"],a:1,e:"The <b>thoracic</b> cavity (chest) — separated from the abdomen by the diaphragm."}],
+8:[{s:"A patient says, 'I have a headache.' A headache is a…",o:["Sign","Symptom","Diagnosis","Prognosis"],a:1,e:"It's what the patient <b>says/feels</b> → a <b>symptom</b>. A measured fever would be a sign."},
+   {s:"A biopsy report says the tumour is <b>malignant</b>. This means it is…",o:["Non-cancerous","Cancerous","An infection","Inflamed"],a:1,e:"<b>Malignant</b> = cancerous (can invade and spread). <b>Benign</b> = non-cancerous."}],
+9:[{s:"You turn your palm UP to hold a bowl of soup. This movement is…",o:["Pronation","Supination","Inversion","Opposition"],a:1,e:"<b>Sup</b>ination — palm up, holding <b>soup</b> 🍲."},
+   {s:"Raising your arm sideways, away from your body, is…",o:["Adduction","Flexion","Abduction","Elevation"],a:2,e:"<b>AB</b>duction — moving <b>A</b>way from the <b>B</b>ody (midline)."},
+   {s:"Pressing a car's accelerator pedal with your foot is…",o:["Dorsiflexion","Plantar flexion","Eversion","Extension of the knee"],a:1,e:"Pointing the toes downward (towards the sole/plantar surface) = <b>plantar flexion</b>."}],
+10:[{s:"<b>Final case:</b> A 30-year-old woman has a fatty, soft, painless lump <b>under the skin</b> of her back. The doctor says it is a 'benign subcutaneous lipoma'. Which statement is correct?",o:["It is a cancerous tumour inside a muscle","It is a non-cancerous fatty tumour under the skin","It is an inflamed fat cell in the blood","It is a surgical removal of fat"],a:1,e:"benign = non-cancerous · sub-cutane-ous = under the skin · lip-oma = fatty tumour."},
+    {s:"<b>Final case:</b> A child with a cough has a heart rate of 150/min and a respiratory rate of 50/min. The doctor writes 'tachycardia and <b>tachypnoea</b>'. What does tachypnoea mean?",o:["Slow breathing","Absence of breathing","Fast breathing","Painful breathing"],a:2,e:"tachy- (fast) + -pnoea (breathing). Slow breathing is brady<b>pnoea</b>; absent breathing is <b>a</b>pnoea. You decoded a word you've never seen!"},
+    {s:"<b>Final case:</b> A footballer injures his ankle by rolling the sole of his foot <b>inward</b>. Which movement caused the injury?",o:["Eversion","Inversion","Dorsiflexion","Circumduction"],a:1,e:"Turning the sole inward = <b>inversion</b> — the most common mechanism of ankle sprain."}]
+};
+
+/* ---------- state ---------- */
+var st={unlocked:0,cur:0,ans:{},first:{}};
+var KEY="lom_tbl_v1";
+try{var sv=JSON.parse(localStorage.getItem(KEY)||"null");if(sv&&typeof sv.unlocked==="number"){st=sv;}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+
+/* ---------- render quizzes ---------- */
+document.querySelectorAll(".selfcheck").forEach(function(box){
+  var sec=+box.dataset.sec, qs=Q[sec];
+  var h=document.createElement("h3"); h.innerHTML=(sec===10?"🏆 Final challenge":"✅ Self-check")+" <span class='badge'>"+qs.length+" question"+(qs.length>1?"s":"")+"</span>";
+  box.appendChild(h);
+  var p=document.createElement("p"); p.style.margin="0"; p.style.fontSize="14px";
+  p.textContent=sec===10?"Apply everything you've learnt to these mini-cases.":"Answer correctly to unlock the next section. Wrong? Read the hint and try again!";
+  box.appendChild(p);
+  qs.forEach(function(q,i){
+    var id=sec+"_"+i, d=document.createElement("div"); d.className="q"; d.style.setProperty("--qc",QC[(sec+i)%QC.length]);
+    d.innerHTML="<div class='stem'>Q"+(i+1)+". "+q.s+"</div>";
+    var fb=document.createElement("div"); fb.className="fb";
+    q.o.forEach(function(t,j){
+      var b=document.createElement("button"); b.className="opt"; b.innerHTML=String.fromCharCode(65+j)+". "+t;
+      b.onclick=function(){
+        if(st.ans[id]) return;
+        if(st.first[id]===undefined) st.first[id]=(j===q.a);
+        if(j===q.a){ st.ans[id]=true; b.classList.add("right"); d.querySelectorAll(".opt").forEach(function(x){x.disabled=true;});
+          fb.className="fb g show"; fb.innerHTML="🎉 <b>Correct!</b> "+q.e; check(sec);}
+        else{ b.classList.add("wrong"); b.disabled=true; fb.className="fb r show"; fb.innerHTML="❌ <b>Not quite — try again!</b> Break the word into its parts, or scroll up to re-check the section.";}
+        save(); updateUI();
+      };
+      if(st.ans[id]){ b.disabled=true; if(j===q.a){b.classList.add("right"); fb.className="fb g show"; fb.innerHTML="🎉 <b>Correct!</b> "+q.e;} }
+      d.appendChild(b);
+    });
+    d.appendChild(fb); box.appendChild(d);
+  });
+});
+function secDone(sec){return Q[sec].every(function(q,i){return st.ans[sec+"_"+i];});}
+function check(sec){ if(secDone(sec)&&st.unlocked<=sec&&sec<N-1){st.unlocked=sec+1;} }
+
+/* ---------- navigation ---------- */
+var toc=document.getElementById("toc");
+TITLES.forEach(function(t,i){var c=document.createElement("button");c.className="chip";c.dataset.i=i;c.onclick=function(){if(i<=st.unlocked)go(i);};toc.appendChild(c);});
+function go(i){st.cur=i;save();updateUI();window.scrollTo({top:0,behavior:"smooth"});}
+document.getElementById("prevBtn").onclick=function(){if(st.cur>0)go(st.cur-1);};
+document.getElementById("nextBtn").onclick=function(){if(st.cur<N-1&&st.cur<st.unlocked)go(st.cur+1);};
+function updateUI(){
+  for(var i=0;i<N;i++){document.getElementById("s"+i).classList.toggle("show",i===st.cur);}
+  toc.querySelectorAll(".chip").forEach(function(c){var i=+c.dataset.i;
+    c.className="chip"+(i===st.cur?" active":"")+(i>st.unlocked?" locked":"")+(secDone(i)&&i!==st.cur?" done":"");
+    c.textContent=(i>st.unlocked?"🔒 ":(secDone(i)?"✓ ":""))+(i+1)+". "+TITLES[i];});
+  var sc=document.getElementById("s"+st.cur);document.getElementById("nav").style.setProperty("--accent",sc.style.getPropertyValue("--accent"));
+  var nb=document.getElementById("nextBtn"), lm=document.getElementById("lockMsg");
+  nb.style.visibility=st.cur===N-1?"hidden":"visible";
+  nb.disabled=!(st.cur<st.unlocked); lm.textContent=(st.cur<N-1&&st.cur>=st.unlocked)?"🔒 Complete the self-check to unlock the next section":"";
+  document.getElementById("prevBtn").style.visibility=st.cur===0?"hidden":"visible";
+  var done=0;for(var k=0;k<N;k++)if(secDone(k))done++;
+  document.getElementById("pbar").style.width=(done/N*100)+"%";
+  document.getElementById("ptext").textContent="Section "+(st.cur+1)+" of "+N+" · "+TITLES[st.cur];
+  var tot=0,fc=0;for(var s in Q)Q[s].forEach(function(q,i){tot++;if(st.first[s+"_"+i])fc++;});
+  var att=Object.keys(st.first).length;
+  document.getElementById("pscore").textContent=att?("First-try correct: "+fc+"/"+att):"";
+  var fs=document.getElementById("finalScore");
+  if(secDone(N-1)){fs.style.display="block";
+    var pct=Math.round(fc/tot*100);
+    fs.innerHTML="🎓 Module complete!<br>First-try score: "+fc+" / "+tot+" ("+pct+"%)<br><span style='font-size:15px;font-weight:600'>"+(pct>=80?"Excellent — you're ready for the iRAT! 🌟":pct>=60?"Good work — revisit the sections you found tricky before class. 👍":"Nice effort — go back over the sections and watch the videos again before class. 💪")+"</span><br><button class='reveal' id='resetBtn' style='margin-top:10px'>↺ Start again</button>";
+    document.getElementById("resetBtn").onclick=function(){st={unlocked:0,cur:0,ans:{},first:{}};save();location.reload();};
+  } else fs.style.display="none";
+}
+
+/* ---------- word builder ---------- */
+var PRE=[["","(no prefix)",""],["peri","peri- (around)","around"],["endo","endo- (inside)","inside"],["tachy","tachy- (fast)","fast"],["brady","brady- (slow)","slow"]];
+var ROOT=[["card","cardi/o (heart)","heart"],["gastr","gastr/o (stomach)","stomach"],["hepat","hepat/o (liver)","liver"],["nephr","nephr/o (kidney)","kidney"],["neur","neur/o (nerve)","nerve"],["oste","oste/o (bone)","bone"],["dermat","dermat/o (skin)","skin"],["arthr","arthr/o (joint)","joint"]];
+var SUF=[["itis","-itis (inflammation)","inflammation of"],["logy","-logy (study of)","study of"],["megaly","-megaly (enlargement)","enlargement of"],["algia","-algia (pain)","pain in"],["oma","-oma (tumour)","tumour of"],["ectomy","-ectomy (removal)","surgical removal of"],["ia","-ia (condition)","condition of"],["scopy","-scopy (looking inside)","looking inside"]];
+var REAL={"carditis":"Inflammation of the heart","pericarditis":"Inflammation of the pericardium (sac around the heart)","endocarditis":"Inflammation of the inner lining of the heart (often its valves)","cardiology":"The specialty that studies the heart","cardiomegaly":"An enlarged heart","tachycardia":"A fast heart rate (>100 beats/min in adults)","bradycardia":"A slow heart rate (<60 beats/min in adults)","gastritis":"Inflammation of the stomach lining","gastralgia":"Stomach pain","gastrectomy":"Surgical removal of (part of) the stomach","gastroscopy":"Looking inside the stomach with a camera tube","hepatitis":"Inflammation of the liver","hepatology":"Study of the liver","hepatomegaly":"An enlarged liver","hepatoma":"A liver tumour","hepatectomy":"Surgical removal of (part of) the liver","nephritis":"Inflammation of the kidney","nephrology":"Study of the kidneys","nephrectomy":"Surgical removal of a kidney","nephromegaly":"Enlarged kidney","neuritis":"Inflammation of a nerve","neurology":"Study of the nervous system","neuralgia":"Nerve pain","neuroma":"A tumour of nerve tissue","osteitis":"Inflammation of bone","osteology":"Study of bones","osteoma":"A benign bone tumour","ostealgia":"Bone pain","dermatitis":"Inflammation of the skin","dermatology":"Study of the skin","arthritis":"Inflammation of a joint","arthralgia":"Joint pain","arthroscopy":"Looking inside a joint with a camera","arthrology":"Study of joints","arthrectomy":"Surgical removal of a joint","endoscopy":"Looking inside the body with a camera tube"};
+function fill(id,arr,def){var s=document.getElementById(id);arr.forEach(function(a,i){var o=document.createElement("option");o.value=i;o.textContent=a[1];s.appendChild(o);});s.value=def;s.onchange=build;}
+fill("bPre",PRE,1);fill("bRoot",ROOT,0);fill("bSuf",SUF,0);
+function build(){
+  var p=PRE[+bPre.value],r=ROOT[+bRoot.value],s=SUF[+bSuf.value];
+  var vowel=/^[aeiouy]/.test(s[0]);
+  var rt=r[0]; if(rt==="card"&&(s[0]==="logy"||s[0]==="megaly"||s[0]==="scopy"))rt="cardi";
+  var link=vowel?"":"o";
+  var word=p[0]+rt+link+s[0];
+  document.getElementById("bWord").innerHTML="<span class='pre'>"+p[0]+"</span><span class='root'>"+rt+"</span>"+(link?"<span style='color:#636e72'>o</span>":"")+"<span class='suf'>"+s[0]+"</span>";
+  var organ=r[2], ph;
+  if(p[0]==="peri")organ="the area around the "+organ; else if(p[0]==="endo")organ="the inside of the "+organ; else if(p[0]==="tachy")organ="a fast "+organ; else if(p[0]==="brady")organ="a slow "+organ; else organ="the "+organ;
+  if(s[0]==="logy")ph="study of "+organ; else if(s[0]==="ia")ph="a condition of "+organ; else if(s[0]==="scopy")ph="looking inside "+organ; else ph=s[2]+" "+organ;
+  var key=word.toLowerCase(), flag=document.getElementById("bFlag");
+  document.getElementById("bMean").innerHTML="Literal meaning: <b>"+ph+"</b>";
+  if(REAL[key]){flag.className="flag real";flag.textContent="✅ Real medical term: "+REAL[key];}
+  else{flag.className="flag fake";flag.textContent="🤔 Not a commonly used term — but now you can decode it!";}
+}
+var bPre=document.getElementById("bPre"),bRoot=document.getElementById("bRoot"),bSuf=document.getElementById("bSuf");build();
+
+/* ---------- direction figure ---------- */
+var DT={sup:"Superior = towards the head (the head is superior to the neck)",inf:"Inferior = towards the feet (the stomach is inferior to the heart)",med:"Medial = towards the midline (the nose is medial to the eyes)",lat:"Lateral = away from the midline (the ears are lateral to the eyes)",prox:"Proximal = closer to where the limb attaches (shoulder is proximal to elbow)",dist:"Distal = further from where the limb attaches (fingers are distal to elbow)"};
+document.querySelectorAll("#dirBtns .dbtn").forEach(function(b){b.onclick=function(){
+  document.querySelectorAll("#dirBtns .dbtn").forEach(function(x){x.classList.remove("on");});
+  document.querySelectorAll(".arr").forEach(function(x){x.classList.remove("on");});
+  b.classList.add("on");document.getElementById("a-"+b.dataset.a).classList.add("on");document.getElementById("dirText").textContent=DT[b.dataset.a];};});
+
+/* ---------- abdominal regions ---------- */
+var R=[["Right hypochondriac","#e84393","Liver, gallbladder","Under the right ribs (hypo = below, chondr = cartilage of the ribs)"],
+["Epigastric","#fd7e14","Stomach, part of liver, pancreas","epi = above + gastr = stomach. 'Heartburn' pain is often felt here"],
+["Left hypochondriac","#6c5ce7","Spleen, part of stomach","Under the left ribs"],
+["Right lumbar (flank)","#0984e3","Ascending colon, right kidney","lumbar = loin"],
+["Umbilical","#00b894","Small intestine, transverse colon","Around the umbilicus (belly button) — early appendicitis pain starts here"],
+["Left lumbar (flank)","#e17055","Descending colon, left kidney","lumbar = loin"],
+["Right iliac (inguinal)","#d63031","Appendix, caecum","Classic site of appendicitis pain"],
+["Hypogastric (suprapubic)","#00a3a3","Urinary bladder, uterus","hypo = below + gastr = stomach — the region below the stomach, above the pubic bone"],
+["Left iliac (inguinal)","#a55eea","Sigmoid colon","Near the left groin"]];
+var XS=[34,110,190,266],YS=[10,115,215,316],rg=document.getElementById("regions"),rl=document.getElementById("rlabels"),NS="http://www.w3.org/2000/svg";
+R.forEach(function(r,i){var c=i%3,w=Math.floor(i/3);
+  var rect=document.createElementNS(NS,"rect");rect.setAttribute("x",XS[c]);rect.setAttribute("y",YS[w]);rect.setAttribute("width",XS[c+1]-XS[c]);rect.setAttribute("height",YS[w+1]-YS[w]);rect.setAttribute("fill",r[1]);rect.setAttribute("class","reg");
+  rect.addEventListener("click",function(){rg.querySelectorAll("rect").forEach(function(x){x.setAttribute("fill-opacity",".35");});rect.setAttribute("fill-opacity",".75");
+    document.getElementById("abdInfo").innerHTML="<div style='font-size:20px;font-weight:800;color:"+r[1]+"'>"+(i+1)+". "+r[0]+"</div><p style='margin:6px 0'><b>Organs:</b> "+r[2]+"</p><p style='margin:0;font-size:14.5px'>💡 "+r[3]+"</p>";});
+  rg.appendChild(rect);
+  var t=document.createElementNS(NS,"text");t.setAttribute("x",(XS[c]+XS[c+1])/2);t.setAttribute("y",(YS[w]+YS[w+1])/2+7);t.textContent=i+1;rl.appendChild(t);});
+
+/* ---------- flip cards ---------- */
+var FC=[["Benign","Non-cancerous; grows slowly and does not spread","A lipoma (fatty lump under the skin)","#00b894"],
+["Malignant","Cancerous; can invade nearby tissue and spread","Lung cancer that has spread to the bone","#d63031"],
+["Lesion","Any area of abnormal tissue","A mouth ulcer, a mole, a lump","#e17055"],
+["Biopsy","Removal of a small piece of tissue for examination","A tiny piece of a breast lump sent to the pathology lab","#6c5ce7"],
+["Diagnosis","Identifying the disease","“You have dengue fever.”","#0984e3"],
+["Prognosis","The predicted outcome","“You should recover fully in about 2 weeks.”","#00a3a3"],
+["Symptom","What the patient feels and reports (subjective)","“I have a headache and feel dizzy.”","#e84393"],
+["Sign","What the doctor finds — seen, felt or measured (objective)","Temperature 39 °C; pale conjunctiva","#fd7e14"],
+["Etiology (aetiology)","The cause of the disease","Smoking → lung cancer; mosquito-borne virus → dengue","#a55eea"],
+["Pathogenesis","How the disease develops, step by step","H. pylori → stomach lining damage → inflammation → ulcer","#20a35a"]];
+var fg=document.getElementById("flipGrid");
+FC.forEach(function(f){var d=document.createElement("div");d.className="flip";d.style.setProperty("--fc",f[3]);d.setAttribute("role","button");d.setAttribute("tabindex","0");
+  d.innerHTML="<div class='in'><div class='f'>"+f[0]+"<small>tap to flip ↻</small></div><div class='b'><div><b>"+f[0]+"</b><br>"+f[1]+"<br><span style='color:#5b6785'>e.g. "+f[2]+"</span></div></div></div>";
+  d.onclick=function(){d.classList.toggle("on");};d.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();d.classList.toggle("on");}};fg.appendChild(d);});
+
+/* ---------- movement cards ---------- */
+var ARM=function(c){return "<svg viewBox='0 0 220 110' width='220' height='110'><g stroke-linecap='round'><line x1='30' y1='90' x2='100' y2='90' stroke='#f3c6a5' stroke-width='14'/><line x1='100' y1='90' x2='160' y2='40' stroke='"+c+"' stroke-width='12' opacity='.9'/><line x1='100' y1='90' x2='180' y2='90' stroke='#b2bec3' stroke-width='12' stroke-dasharray='4 6'/></g><circle cx='100' cy='90' r='8' fill='#2d3436'/><path d='M165,80 A70,70 0 0 0 150,52' stroke='"+c+"' stroke-width='3' fill='none'/><text x='110' y='20' font-size='12' fill='#2d3436' font-family='Segoe UI,Arial'>flexion: angle ↓</text><text x='60' y='108' font-size='12' fill='#2d3436' font-family='Segoe UI,Arial'>extension: angle ↑</text></svg>";};
+var ABD=function(c){return "<svg viewBox='0 0 220 120' width='220' height='120'><circle cx='110' cy='22' r='13' fill='#f3c6a5'/><rect x='98' y='36' width='24' height='46' rx='8' fill='#f3c6a5'/><g stroke-linecap='round' stroke-width='9'><line x1='100' y1='42' x2='92' y2='88' stroke='#b2bec3' stroke-dasharray='3 5'/><line x1='100' y1='42' x2='50' y2='20' stroke='"+c+"'/><line x1='120' y1='42' x2='128' y2='88' stroke='#f3c6a5'/><line x1='104' y1='82' x2='100' y2='115' stroke='#f3c6a5'/><line x1='116' y1='82' x2='120' y2='115' stroke='#f3c6a5'/></g><path d='M60,80 Q40,55 52,32' stroke='"+c+"' stroke-width='3' fill='none' marker-end='url(#ahO)'/><text x='140' y='30' font-size='12' font-family='Segoe UI,Arial' fill='#2d3436'>away from</text><text x='140' y='44' font-size='12' font-family='Segoe UI,Arial' fill='#2d3436'>midline = AB</text></svg>";};
+var FOOT=function(c){return "<svg viewBox='0 0 220 110' width='220' height='110'><line x1='70' y1='5' x2='70' y2='70' stroke='#f3c6a5' stroke-width='16' stroke-linecap='round'/><path d='M62,70 L130,72 Q140,80 128,86 L62,86 Z' fill='#f3c6a5'/><path d='M66,70 L118,32' stroke='"+c+"' stroke-width='8' stroke-linecap='round' opacity='.7'/><path d='M66,84 L118,108' stroke='#6c5ce7' stroke-width='8' stroke-linecap='round' opacity='.7'/><text x='125' y='34' font-size='12' font-family='Segoe UI,Arial' fill='"+c+"'>dorsiflexion ↑</text><text x='122' y='106' font-size='12' font-family='Segoe UI,Arial' fill='#6c5ce7'>plantar flexion ↓</text></svg>";};
+var EMO=function(e){return "<div style='font-size:46px;text-align:center;line-height:1.2'>"+e+"</div>";};
+var MV=[["1. Flexion & Extension","#fd7e14",ARM("#fd7e14"),[["Flexion","Decreasing the angle between two bones; bending","Bending the elbow to bring food to your mouth 🍔"],["Extension","Increasing the angle; straightening","Straightening your elbow to reach for a door handle"],["Hyperextension","Extension beyond the normal range","Tilting your head back to look at the sky"]],"Bend and straighten your elbow 5 times."],
+["2. Abduction & Adduction","#e84393",ABD("#e84393"),[["Abduction","Movement away from the midline","Raising your arm sideways to wave goodbye"],["Adduction","Movement towards the midline","Bringing your arm back to your side"]],"Do a ‘jumping jack’ — arms and legs abduct, then adduct!"],
+["3. Rotation","#0984e3",EMO("🔄"),[["Medial (internal) rotation","Turning towards the midline","Rotating the shoulder inward to put your hand on your tummy"],["Lateral (external) rotation","Turning away from the midline","Rotating the hip outward to sit cross-legged"]],"Shake your head ‘no’ — that's rotation at the neck."],
+["4. Circumduction","#00b894",EMO("⭕"),[["Circumduction","Circular movement combining flexion, extension, abduction and adduction","Drawing a big circle in the air with your arm, like a bowler 🏏"]],"Draw circles in the air with your straight arm."],
+["5. Supination & Pronation","#6c5ce7",EMO("🤲 ↔ 🫳"),[["Supination","Turning the palm up / forward","Holding a bowl of soup 🍲"],["Pronation","Turning the palm down / backward","Palm flat on a table; typing on a keyboard ⌨️"]],"Turn a door knob or a key — supinate and pronate."],
+["6. Inversion & Eversion (foot)","#d63031",EMO("🦶"),[["Inversion","Turning the sole inward (towards the midline)","Standing on the outer edges of your feet"],["Eversion","Turning the sole outward (away from the midline)","Standing on the inner edges of your feet"]],"Look at your soles — turn them to face each other (inversion)."],
+["7. Dorsiflexion & Plantar flexion (ankle)","#00a3a3",FOOT("#00a3a3"),[["Dorsiflexion","Bending the foot upward towards the shin","Walking on your heels 👣"],["Plantar flexion","Bending the foot downward; pointing the toes","Pressing a car's accelerator; standing on tiptoe 🩰"]],"Stand on tiptoe, then on your heels."],
+["8. Protraction & Retraction","#a55eea",EMO("😬"),[["Protraction","Moving a part forward","Pushing your jaw forward"],["Retraction","Moving a part backward","Pulling your jaw back"]],"Jut your chin forward, then pull it back."],
+["9. Elevation & Depression","#e17055",EMO("🤷"),[["Elevation","Raising a part upward","Shrugging your shoulders · closing the mouth (elevating the mandible)"],["Depression","Lowering a part downward","Dropping your shoulders · opening your mouth"]],"Shrug, then relax your shoulders."],
+["10. Opposition & Reposition (thumb)","#20a35a",EMO("👌"),[["Opposition","Moving the thumb to touch another fingertip","Picking up a pen; the ‘OK’ sign"],["Reposition","Returning the thumb to the anatomical position","Letting go of the pen"]],"Touch your thumb to each fingertip in turn — this is what makes us human! ✋"]];
+var mg=document.getElementById("mvGrid");
+MV.forEach(function(m){var d=document.createElement("div");d.className="mv";d.style.setProperty("--mc",m[1]);
+  var rows=m[3].map(function(r){return "<div class='mvr'><b>"+r[0]+"</b> — "+r[1]+"<div class='mve'>e.g. "+r[2]+"</div></div>";}).join("");
+  d.innerHTML="<h4>"+m[0]+"</h4>"+m[2]+rows+"<span class='try'>🙋 Try it: "+m[4]+"</span>";
+  mg.appendChild(d);});
+
+/* ---------- practice reveal ---------- */
+var PR=[["Gastroenteritis","<span class='root'>gastr/o</span> (stomach) + <span class='root'>enter</span> (intestine) + <span class='suf'>-itis</span> (inflammation)","Inflammation of the stomach and intestines — the classic ‘stomach flu’ with vomiting and diarrhoea."],
+["Hypothyroidism","<span class='pre'>hypo-</span> (below/deficient) + <span class='root'>thyroid</span> + <span class='suf'>-ism</span> (condition)","A condition in which the thyroid gland is underactive (too little thyroid hormone)."],
+["Osteoarthritis","<span class='root'>oste/o</span> (bone) + <span class='root'>arthr</span> (joint) + <span class='suf'>-itis</span> (inflammation)","A joint disease affecting the bone and cartilage of joints (mainly ‘wear and tear’, e.g. of the knees)."],
+["Hepatosplenomegaly","<span class='root'>hepat/o</span> (liver) + <span class='root'>splen/o</span> (spleen) + <span class='suf'>-megaly</span> (enlargement)","Enlargement of both the liver and the spleen."],
+["Subcutaneous","<span class='pre'>sub-</span> (under) + <span class='root'>cutane</span> (skin) + <span class='suf'>-ous</span> (pertaining to)","Pertaining to the area under the skin — e.g. an insulin injection is given subcutaneously."],
+["Bradycardia","<span class='pre'>brady-</span> (slow) + <span class='root'>card</span> (heart) + <span class='suf'>-ia</span> (condition)","A slow heart rate — fewer than 60 beats per minute in adults."]];
+var pr=document.getElementById("practice");
+PR.forEach(function(p,i){var d=document.createElement("div");d.className="q";d.style.setProperty("--qc",QC[i%QC.length]);
+  d.innerHTML="<div class='stem' style='font-size:18px'>"+(i+1)+". "+p[0]+"</div><button class='reveal'>👀 Reveal answer</button><div class='ans'><div>"+p[1]+"</div><div style='margin-top:4px'>= <b>"+p[2]+"</b></div></div>";
+  d.querySelector(".reveal").onclick=function(){d.querySelector(".ans").classList.toggle("show");};pr.appendChild(d);});
+
+/* ---------- decode note ---------- */
+document.querySelectorAll(".dc").forEach(function(s){s.onclick=function(){
+  var nx=s.nextElementSibling; if(nx&&nx.classList.contains("decoded")){nx.remove();s.classList.remove("open");return;}
+  var sp=document.createElement("span");sp.className="decoded";sp.textContent="🔎 "+s.textContent.trim()+": "+s.dataset.d;s.classList.add("open");s.after(sp);};});
+
+if(st.cur>st.unlocked)st.cur=st.unlocked;
+updateUI();
+})();
+</script>
+</body>
+</html>
